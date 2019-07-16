@@ -8,6 +8,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 项目名：webserver_study
@@ -17,6 +19,7 @@ import java.io.IOException;
  * @date : 2019-07-09 21:34
  **/
 public class XmlTest01 {
+
     public static void main(String[] args) {
         //获取解析工厂
         SAXParserFactory factory =SAXParserFactory.newInstance();
@@ -30,6 +33,12 @@ public class XmlTest01 {
 
             try {
                 parser.parse(Thread.currentThread().getContextClassLoader().getResourceAsStream("XML_reader/n.xml"),pHandler);
+                List<Person> personList = pHandler.getPersons();
+                for (Person p:personList
+                     ) {
+                    System.out.println(p.getName());
+
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -43,20 +52,33 @@ public class XmlTest01 {
     }
 }
 class PHandler extends DefaultHandler{
+    private List<Person> persons;
+    private Person person;
+    private String tag;//存储操作的标签
 
     @Override
     public void startDocument() throws SAXException {
+        persons = new ArrayList<Person>();
         System.out.println("解析开始");
     }
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-        super.startElement(uri, localName, qName, attributes);
+        if (qName != null) {
+            tag = qName;
+            if ("person".equals(tag)){
+                person = new Person();
+            }
+        }
+
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-
+        if ("person".equals(qName)){
+            persons.add(person);
+        }
+        tag = null;
     }
 
     @Override
@@ -66,6 +88,18 @@ class PHandler extends DefaultHandler{
 
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
-        super.characters(ch, start, length);
+        String contents = new String(ch,start,length).trim();
+        if (tag!=null){
+            if ("name".equals(tag)){
+                person.setName(contents);
+            }
+            if ("age".equals(tag)){
+                person.setAge(Integer.valueOf(contents));
+            }
+        }
+    }
+
+    public List<Person> getPersons() {
+        return persons;
     }
 }
